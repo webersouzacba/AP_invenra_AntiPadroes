@@ -7,7 +7,7 @@ from .store_json import JsonFileDatabase
 
 
 class PersistenceProxy:
-    """Proxy (Structural Pattern) para acessso a persistencia."""
+    """Proxy (Structural Pattern) para acesso à persistência."""
 
     def __init__(self, db: JsonFileDatabase) -> None:
         self._db = db
@@ -45,6 +45,23 @@ class PersistenceProxy:
         events.append(event)
         self._flush()
 
+    def list_events(
+        self,
+        activity_id: Optional[str] = None,
+        user_id: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """Lista eventos do log, com filtros opcionais por activityID e userID."""
+        data = self._ensure_cache()
+        events: List[Dict[str, Any]] = data.get("events", [])
+        out: List[Dict[str, Any]] = []
+        for e in events:
+            if activity_id and e.get("activityID") != activity_id:
+                continue
+            if user_id and e.get("userID") != user_id:
+                continue
+            out.append(e)
+        return out
+
     def increment_aggregate(self, activity_id: str, metric: str, delta: int = 1) -> None:
         """Incrementa uma métrica agregada por activityID (sem duplicação de eventos)."""
         data = self._ensure_cache()
@@ -59,15 +76,3 @@ class PersistenceProxy:
         aggregates = data.get("aggregates", {})
         return dict(aggregates.get(activity_id, {}))
 
-
-def list_events(self, activity_id: Optional[str] = None, user_id: Optional[str] = None) -> List[Dict[str, Any]]:
-    data = self._ensure_cache()
-    events: List[Dict[str, Any]] = data.get("events", [])
-    out: List[Dict[str, Any]] = []
-    for e in events:
-        if activity_id and e.get("activityID") != activity_id:
-            continue
-        if user_id and e.get("userID") != user_id:
-            continue
-        out.append(e)
-    return out
