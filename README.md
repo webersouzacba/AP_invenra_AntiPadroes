@@ -1,280 +1,104 @@
-# Activity Provider – Inven!RA
-### Jogo Sopa de Letras – Padrões de Comportamento (Observer)
+# Activity Provider – Inven!RA  
+## Jogo Sopa de Letras — Antipadrões e Refatoração (Atividade 7)
 
 ### UC: Arquitetura e Padrões de Software (APSI) – MEIW – UAb/UTAD  
-### Ano letivo 2025/2026
-### Autor/Aluno: Weber Marcelo Guirra de Souza
+### Ano letivo 2025/2026  
+### Autor/Aluno: Weber Marcelo Guirra de Souza  
 
 ---
 
-## Objetivo do Projeto
+## Enquadramento
 
-Este projeto implementa um **Activity Provider** compatível com a plataforma **Inven!RA**, com foco na e-atividade de **padrões estruturais**, evidenciando explicitamente:
+Este repositório contém a **versão refatorada** do *Activity Provider* **Sopa de Letras**, desenvolvida no âmbito da **Atividade 7 – Antipadrões e Refatoração** da UC **Arquitetura e Padrões de Software (APSI)**.
 
-- **Observer (principal)**: `EventBus` (Subject) publica eventos (`DomainEvent`) e `PersistenceEventObserver` (Observer) reage persistindo eventos para analytics.
-- **Facade (base)**: `ActivityProviderFacade` permanece como ponto único de orquestração dos casos de uso do Activity Provider.
-- **Proxy/Adapter (base)**: `PersistenceProxy` e `ContractAdapter` seguem como apoio para persistência e adaptação de contrato.
+O projeto parte da implementação existente das atividades anteriores e realiza uma **refatoração incremental**, orientada pelas decisões registadas no relatório da atividade, com os seguintes objetivos:
 
+- Identificar antipadrões presentes na versão anterior
+- Aplicar refatorações localizadas e justificadas
+- Preservar integralmente o comportamento observável do sistema
+- Manter compatibilidade com o contrato da plataforma **Inven!RA**
 
-Como suporte (de atividades anteriores), este projeto mantém:
-- **Builder**: `WordSearchGameBuilder` para criação/configuração da instância do jogo
-- **Singleton (apoio)**: `InstanceManager` para registo em memória (mapeamento activityID → instance_id)
+---
 
-O Activity Provider permite que a plataforma Inven!RA:
-- Renderize a página de configuração da atividade
-- Obtenha a lista de parâmetros configuráveis
-- Resolva a URL de acesso à instância (user_url / deploy – 1ª fase)
-- Obtenha a lista de analytics disponíveis
-- Consulte analytics agregados (POST)
+## Antipadrões tratados (síntese)
+
+Na versão anterior foram identificados e tratados:
+
+- **Minefield**: responsabilidades implícitas e dispersas relacionadas com acesso a eventos persistidos  
+- **Lava Flow / Boat Anchor**: módulos e código legado não utilizados, mantidos sem impacto funcional  
+
+As refatorações aplicadas encontram-se documentadas no relatório da atividade e refletem-se diretamente na organização atual do código.
 
 ---
 
 ## Tecnologias Utilizadas
 
-- Python 3.12+
-- FastAPI – Framework para APIs REST
-- Uvicorn – Servidor ASGI
-- JSON File Storage (mock de persistência)
-- HTML/JS – Páginas estáticas de teste (sem Postman)
+- Python 3.9+
+- FastAPI
+- Uvicorn (ASGI)
+- Persistência simples em ficheiros JSON (mock)
+- HTML/JS para páginas de teste manuais
 
 ---
 
-# URL de Produção (VPS)
+## 🌐 Serviço em Produção (VPS)
 
-O serviço está publicado em:
+A versão final refatorada encontra-se publicada numa VPS Linux (AlmaLinux), com execução persistente via **systemd**.
 
-`http://69.6.220.255:9002/`
+### Base URL
 
----
-📡 Integração com a Inven!RA
+http://69.6.220.255:9012/
 
-JSON de registo do Activity Provider
+## 📡 Integração com a plataforma Inven!RA
+
+JSON de registo do Activity Provider:
 
 ```json
 {
-  "name": "Sopa de Letras – APSI (Padrões de Comportamento – Observer)",
-  "config_url":    "http://69.6.220.255:9002/config",
-  "json_params_url":"http://69.6.220.255:9002/params",
-  "user_url":      "http://69.6.220.255:9002/deploy",
-  "analytics_url": "http://69.6.220.255:9002/analytics",
-  "analytics_list_url":"http://69.6.220.255:9002/analytics/available"
+  "name": "Sopa de Letras – APSI (Antipadrões e Refatoração)",
+  "config_url": "http://69.6.220.255:9012/config",
+  "json_params_url": "http://69.6.220.255:9012/params",
+  "user_url": "http://69.6.220.255:9012/deploy",
+  "analytics_url": "http://69.6.220.255:9012/analytics",
+  "analytics_list_url": "http://69.6.220.255:9012/analytics/available"
 }
-```
 
-# 🔌 Endpoints da API
-Os URLs abaixo seguem o Contrato Oficial Inven!RA.
+Página de teste para o serviço POST / analytics disponível em:
 
-## 1) Página de configuração da atividade
+http://69.6.220.255:9012/static/teste_analytics_POST.html
 
-### `GET /config`  (alias contrato: `GET /config_url`)
+Repositório GitHub
 
-Retorna HTML contendo os campos de configuração.
+O projeto encontra-se versionado no GitHub, com organização explícita por branches para evidenciar o processo de refatoração:
 
-Exemplo:
+https://github.com/webersouzacba/AP_invenra_AntiPadroes/
 
-```text
-http://69.6.220.255:9002/config
-```
+main — estado pré-refatoração (baseline da atividade anterior), marcado pela tag v6-baseline.
 
----
+refactor/atividade7 — versão refatorada, correspondente à Atividade 7 (antipadrões e refatoração).
 
-## 2) Lista de parâmetros configuráveis
+Esta estrutura garante rastreabilidade entre o estado inicial e o resultado final da refatoração.
 
-### `GET /params` (alias contrato: `GET /json_params_url`)
 
-Retorna JSON com schema/parametrização.
+Estrutura ataul do Projeto:
 
-Exemplo:
-
-```text
-http://69.6.220.255:9002/params
-```
-
----
-
-## 3) Deploy / Resolução de user_url (1ª fase)
-
-### `GET /deploy?activityID=XXXX` (alias contrato: `GET /user_url?activityID=XXXX`)
-
-Retorna JSON com `entry_url` (URL de acesso ao jogo para o aluno).
-
-Exemplo:
-
-```text
-http://69.6.220.255:9002/deploy?activityID=TESTE123
-```
-
----
-
-## 4) Analytics agregados
-
-### `POST /analytics` (alias contrato: `POST /analytics_url`)
-
-URL:
-
-```text
-http://69.6.220.255:9002/analytics
-```
-
-Body exemplo:
-
-```json
-{
-  "activityID": "TESTE123",
-  "query": "default",
-  "params": {},
-  "userID": "ALUNO_01"
-}
-```
-
----
-
-## 5) Lista de analytics disponíveis
-
-### `GET /analytics/available` (alias contrato: `GET /analytics_list_url`)
-
-Exemplo:
-
-```text
-http://69.6.220.255:9002/analytics/available
-```
-
----
-
-## Página de teste do POST `/analytics`
-
-Para testar o endpoint sem Postman, use a página HTML interativa:
-
-```text
-http://69.6.220.255:9002/static/teste_analytics_POST.html
-```
-
----
-
-## Swagger (documentação automática)
-
-```text
-http://69.6.220.255:9002/docs
-```
-
----
-
-# Estrutura do Projeto
-
-```
-AP_invenra_Padroes_estrutura/
+AP_invenra_AntiPadroes/
 │
-├── main.py                     # App FastAPI – pontos de entrada dos serviços REST
-├── requirements.txt            # Dependências Python
-├── README.md                   # Documentação do projeto
+├── main.py                     # App FastAPI (ponto de entrada)
+├── requirements.txt
+├── README.md
 ├── .gitignore
 │
-├── static/                     # Páginas HTML de apoio e testes manuais
-│   ├── index.html              # Página principal de navegação e descrição da API
-│   ├── teste_deploy_GET.html   # Página de teste do endpoint /deploy
-│   └── teste_analytics_POST.html   # Página de teste do POST /analytics (JSON)
+├── static/
+│   ├── index.html
+│   ├── teste_deploy_GET.html
+│   └── teste_analytics_POST.html
 │
-└── ap/                         # Módulos internos do Activity Provider
-    ├── facade.py               # Facade – coordena os casos de uso principais
-    ├── contract_adapter.py     # Adapter – adapta o contrato Inven!RA para o domínio interno
-    ├── persistence_proxy.py    # Proxy – abstrai o acesso ao armazenamento
-    ├── store_json.py           # Persistência simples em ficheiro JSON (mock)
-    ├── builder.py              # Builder (apoio) – cria a configuração padrão do jogo
-    ├── instance_manager.py     # Singleton (apoio) – gere instâncias da atividade
+└── ap/
+    ├── facade.py               # Facade – coordenação dos casos de uso
+    ├── persistence_proxy.py    # Proxy – acesso à persistência
+    ├── store_json.py           # Persistência em JSON (mock)
+    ├── builder.py              # Builder (apoio)
+    ├── instance_manager.py     # Singleton (apoio)
     └── models.py               # DTOs e validação (Pydantic)
-```
 
----
-
-# Como os padrões aparecem no código (mapeamento rápido)
-
-- **Facade**: `ap/facade.py` → `ActivityProviderFacade`
-- **Adapter**: `ap/contract_adapter.py` → `ContractAdapter`
-- **Proxy**: `ap/persistence_proxy.py` → `PersistenceProxy` (usa `ap/store_json.py`)
-- **Suporte (atividade anterior)**:
-  - `ap/builder.py` → `WordSearchGameBuilder`
-  - `ap/instance_manager.py` → `InstanceManager`
-
----
-
-# Executando Localmente
-
-```bash
-python -m venv venv
-# Windows:
-venv\Scripts\activate
-# Linux/macOS:
-# source venv/bin/activate
-
-pip install -r requirements.txt
-uvicorn main:app --reload --port 8080
-```
-
-Abrir:
-- `http://127.0.0.1:8080/`
-- `http://127.0.0.1:8080/docs`
-- `http://127.0.0.1:8080/static/index.html`
-
----
-
-
----
-
-# Publicação no VPS (HostGator / AlmaLinux) – systemd
-
-Este projeto foi publicado como um serviço dedicado do **systemd** na porta **9002**, sem substituir as versões anteriores (9000/9001).
-
-## Serviço
-
-Nome do serviço:
-
-`ap-invenra-padroes-comportamento.service`
-
-Arquivo (no servidor):
-
-`/etc/systemd/system/ap-invenra-padroes-comportamento.service`
-
-Conteúdo de referência:
-
-```ini
-[Unit]
-Description=InvenRA Activity Provider - Padroes de Comportamento (FastAPI/Uvicorn)
-After=network.target
-
-[Service]
-Type=simple
-WorkingDirectory=/opt/apps/AP_invenra_Padroes_comportamento
-ExecStart=/opt/apps/AP_invenra_Padroes_comportamento/.venv/bin/uvicorn main:app --host 0.0.0.0 --port 9002
-Restart=always
-RestartSec=3
-Environment=PYTHONUNBUFFERED=1
-StandardOutput=journal
-StandardError=journal
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Comandos úteis:
-
-```bash
-systemctl daemon-reload
-systemctl enable --now ap-invenra-padroes-comportamento
-systemctl status ap-invenra-padroes-comportamento --no-pager
-journalctl -u ap-invenra-padroes-comportamento -f
-```
-
-## URLs (produção)
-
-- `http://69.6.220.255:9002/config`
-- `http://69.6.220.255:9002/params`
-- `http://69.6.220.255:9002/deploy`
-- `http://69.6.220.255:9002/analytics`
-- `http://69.6.220.255:9002/analytics/available`
-
-# Repositório no GitHub
-
-Nome do repositório:
-
-`AP_invenra_Padroes_comportamento`
----
